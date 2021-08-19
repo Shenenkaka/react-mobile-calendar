@@ -1,0 +1,51 @@
+{
+  "name": "react-mobile-calendar",
+  "version": "0.1.0",
+  "description": "移动端日历组件，可切换月模式，周模式。",
+  "main": "webpack.build.config.js",
+  "scripts": {
+    "start": "node ./server/dev.js",
+    "stage": "node ./server/prod.js",
+    "deploy": "webpack --config ./server/webpack.prod.config.js",
+    "build": "webpack --config ./webpack.build.config.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shenenkaka/react-mobile-calendar.git"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "pdfjs-dist": "^2.6.347",
+    "react-virtualized": "^9.22.3"
+  },
+  "peerDependencies": {
+    "react": ">=16",
+    "react-dom": ">=16"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.12.10",
+    "@babel/core": "^7.12.10",
+    "@babel/polyfill": "^7.12.1",
+    "@babel/preset-env": "^7.12.11",
+    "@babel/preset-react": "^7.12.10",
+    "babel-loader": "^8.2.2",
+    "css-loader": "^5.0.1",
+    "ejs": "^3.1.5",
+    "express": "^4.17.1",
+    "less": "^4.1.0",
+    "less-loader": "^7.3.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "style-loader": "^2.0.0",
+    "webpack": "^5.17.0",
+    "webpack-cli": "^4.4.0",
+    "webpack-dev-middleware": "^4.1.0",
+    "webpack-hot-middleware": "^2.25.0"
+  },
+  "author": "Shenenkaka",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Shenenkaka/react-mobile-calendar/issues"
+  },
+  "homepage": "https://github.com/Shenenkaka/react-mobile-calendar#readme"
+}

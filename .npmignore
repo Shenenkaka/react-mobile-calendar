@@ -1,0 +1,7 @@
+/node_modules
+/playground
+/public
+/server
+/views
+/webpack.build.config.js
+/babel.config.json
