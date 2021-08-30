@@ -14,8 +14,8 @@ export default class Calendar extends Component {
     dataArr: [], // 当前可视区域数据
     allDataArr: [], // 轮播数组
     weekDataArr: [], // 周轮播数组
+    currentDate: {}, // 当天时间 {year, month, day}
     selectData: this.getCurrentDate(), // 选中日期信息 -> year, month, day
-    isSelectedCurrentDate: false, // 是否点选当前月份信息 (配合月视图减少点击切换时的数组更新)
     translateIndex: 0, // 轮播所在位置
     transitionDuration: 0.3, // 动画持续时间
     needAnimation: true, // 左右滑动是否需要动画
@@ -37,7 +37,6 @@ export default class Calendar extends Component {
     isDelay: true, // 是否延迟 (动画结束在处理数据)
     touchAreaHeight: 40, // 底部区域高度
     touchAreaPadding: 10, // 底部区域padding
-    isClicked: false, // 点选元素 (去除周视图切换月份时的动画延迟)
   };
 
   componentDidMount() {
@@ -62,15 +61,11 @@ export default class Calendar extends Component {
       allDataArr,
       weekDataArr,
       touch,
-      dataArr,
     } = this.state;
-    console.log("dataArr >>> ", dataArr);
     return (
       <div className="calendar" ref={this.calendarRef}>
         <section className="header">
-          {`${selectData.year || ""}年${selectData.month || ""}月${
-            selectData.day || ""
-          }日`}
+          {`${selectData.year || ""}年${selectData.month || ""}月`}
         </section>
         <ul className="week-area">
           {(weekArr || []).map((item, index) => {
@@ -127,22 +122,22 @@ export default class Calendar extends Component {
                         }s`,
                       }}
                     >
-                      {(monthItem || []).map((n, index) => {
+                      {(monthItem || []).map((mItem, index) => {
                         return (
                           <li
                             key={index}
                             className={`data-item ${
-                              n.isSelected ? "selected" : ""
+                              this.dateIsSelected(mItem) ? "selected" : ""
                             } ${
-                              n.type !== "normal" && !isWeekView
+                              mItem.type !== "normal" && !isWeekView
                                 ? "other-item"
                                 : ""
                             }`}
                             style={{ height: `${itemHeight}px` }}
-                            onClick={this.checkoutDate}
+                            onClick={() => this.checkoutDate(mItem)}
                           >
                             <span className="data-font calendar-item">
-                              {n.day}
+                              {mItem.day}
                             </span>
                           </li>
                         );
@@ -174,27 +169,12 @@ export default class Calendar extends Component {
 
   // 更新轮播数组
   changeAllData(val, selectData) {
-    const {
-      isSelectedCurrentDate,
-      isWeekView,
-      lastWeek,
-      nextWeek,
-      isDelay,
-      isClicked,
-      transitionDuration,
-    } = this.state;
-    if (isSelectedCurrentDate && !isWeekView) return;
+    const { isDelay, transitionDuration } = this.state;
 
     const preDate = this.getPreMonth(selectData);
     const preDataArr = this.getMonthData(preDate, true);
     const nextDate = this.getNextMonth(selectData);
     const nextDataArr = this.getMonthData(nextDate, true);
-
-    if (isWeekView) {
-      const { sliceStart } = this.dealWeekViewSliceStart();
-      preDataArr.splice(sliceStart, 7, ...lastWeek);
-      nextDataArr.splice(sliceStart, 7, ...nextWeek);
-    }
 
     const delayHandle = (delay) => {
       this.setState({
@@ -214,10 +194,7 @@ export default class Calendar extends Component {
       return;
     }
 
-    setTimeout(
-      () => delayHandle(),
-      isClicked && isWeekView ? 0 : transitionDuration * 1000
-    );
+    setTimeout(() => delayHandle(), transitionDuration * 1000);
   }
   // 获取当前日期
   getCurrentDate() {
@@ -276,56 +253,46 @@ export default class Calendar extends Component {
 
     return dataArr;
   }
+
+  dateIsSelected(item) {
+    const { currentDate } = this.state;
+    return (
+      item.year === currentDate.year &&
+      item.month === currentDate.month &&
+      item.day === currentDate.day
+    );
+  }
+
   // 点选切换日期
   checkoutDate = (selectData) => {
-    const { isWeekView, translateIndex, dataArr } = this.state;
+    const { allDataArr } = this.state;
     this.setState({
-      isSelectedCurrentDate: true,
-      isClicked: true,
+      currentDate: selectData,
     });
-    if (isWeekView && selectData.type !== "normal") {
-      this.setState({
-        needAnimation: false,
-        needHeightAnimation: false,
-      });
-    }
 
-    if (selectData.type === "next") {
-      this.setState({
-        translateIndex: translateIndex + 1,
-      });
-      this.dealMonthData("NEXT_MONTH", selectData.day);
-      return;
-    }
-
-    if (selectData.type === "pre") {
-      this.setState({
-        translateIndex: translateIndex - 1,
-      });
-      this.dealMonthData("PRE_MONTH", selectData.day);
-      return;
-    }
+    const newDataArr = allDataArr[1].map((item) => {
+      if (item.isSelected && item.type === "normal") {
+        return {
+          ...item,
+          isSelected: false,
+        };
+      }
+      if (item.day === selectData.day && item.type === "normal") {
+        return {
+          ...item,
+          isSelected: true,
+        };
+      }
+      return item;
+    });
 
     this.setState({
       selectData: {
         ...this.state.selectData,
         day: selectData.day,
       },
-      dataArr: dataArr.map((item) => {
-        if (item.isSelected && item.type === "normal") {
-          return {
-            ...item,
-            isSelected: false,
-          };
-        }
-        if (item.day === selectData.day && item.type === "normal") {
-          return {
-            ...item,
-            isSelected: true,
-          };
-        }
-        return item;
-      }),
+      dataArr: newDataArr,
+      allDataArr: [allDataArr[0], newDataArr, allDataArr[2]],
     });
   };
   // 获取前(后)一个月的年月日信息
@@ -379,10 +346,10 @@ export default class Calendar extends Component {
     if (!isEqual(newDataArr, currentDataArr)) {
       this.changeAllData(newDataArr, newSelectData);
     }
+
     this.setState({
       selectData: newSelectData,
       dataArr: newDataArr,
-      isSelectedCurrentDate: false,
       lineNum: Math.ceil(newDataArr.length / 7),
     });
   }
@@ -390,6 +357,7 @@ export default class Calendar extends Component {
   checkoutCurrentDate() {
     this.setState({
       isDelay: true,
+      currentDate: this.getCurrentDate(),
     });
     this.dealMonthData();
   }
@@ -398,7 +366,6 @@ export default class Calendar extends Component {
     this.setState({
       isTouching: true,
       needAnimation: true,
-      isClicked: false,
       touchStartPositionX: event.touches[0].clientX,
       touchStartPositionY: event.touches[0].clientY,
       touch: {
