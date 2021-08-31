@@ -14,8 +14,8 @@ export default class Calendar extends Component {
     dataArr: [], // 当前可视区域数据
     allDataArr: [], // 轮播数组
     weekDataArr: [], // 周轮播数组
-    currentDate: {}, // 当天时间 {year, month, day}
-    selectData: this.getCurrentDate(), // 选中日期信息 -> year, month, day
+    selectData: {}, // 选中日期信息 -> year, month, day
+    currentDate: new Date(),
     translateIndex: 0, // 轮播所在位置
     transitionDuration: 0.3, // 动画持续时间
     needAnimation: true, // 左右滑动是否需要动画
@@ -34,7 +34,7 @@ export default class Calendar extends Component {
     lineNum: 0, // 当前视图总行数
     lastWeek: [], // 周视图 前一周数据
     nextWeek: [], // 周视图 后一周数据
-    isDelay: true, // 是否延迟 (动画结束在处理数据)
+    immediate: true, // 是否延迟 (动画结束在处理数据)
     touchAreaHeight: 40, // 底部区域高度
     touchAreaPadding: 10, // 底部区域padding
   };
@@ -169,7 +169,7 @@ export default class Calendar extends Component {
 
   // 更新轮播数组
   changeAllData(val, selectData) {
-    const { isDelay, transitionDuration } = this.state;
+    const { immediate, transitionDuration } = this.state;
 
     const preDate = this.getPreMonth(selectData);
     const preDataArr = this.getMonthData(preDate, true);
@@ -184,24 +184,24 @@ export default class Calendar extends Component {
       });
       if (delay) {
         this.setState({
-          isDelay: false,
+          immediate: false,
         });
       }
     };
 
-    if (isDelay) {
-      delayHandle(isDelay);
+    if (immediate) {
+      delayHandle(immediate);
       return;
     }
 
     setTimeout(() => delayHandle(), transitionDuration * 1000);
   }
   // 获取当前日期
-  getCurrentDate() {
+  getCurrentDateData(date) {
     return {
-      year: new Date().getFullYear(),
-      month: new Date().getMonth() + 1,
-      day: new Date().getDate(),
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
+      day: date.getDate(),
     };
   }
   // 获取指定月份数据
@@ -257,18 +257,22 @@ export default class Calendar extends Component {
   dateIsSelected(item) {
     const { currentDate } = this.state;
     return (
-      item.year === currentDate.year &&
-      item.month === currentDate.month &&
-      item.day === currentDate.day
+      item.type === "normal" &&
+      item.year === currentDate.getFullYear() &&
+      item.month === currentDate.getMonth() + 1 &&
+      item.day === currentDate.getDate()
     );
   }
 
   // 点选切换日期
   checkoutDate = (selectData) => {
+    // 不是当月不能被选择
+    if (selectData.type !== "normal") {
+      return;
+    }
+
     const { allDataArr } = this.state;
-    this.setState({
-      currentDate: selectData,
-    });
+    const { onCurrentDateChange } = this.props;
 
     const newDataArr = allDataArr[1].map((item) => {
       if (item.isSelected && item.type === "normal") {
@@ -286,15 +290,20 @@ export default class Calendar extends Component {
       return item;
     });
 
+    const currentDate = new Date(
+      `${selectData.year}/${selectData.month}/${selectData.day}`
+    );
+
     this.setState({
-      selectData: {
-        ...this.state.selectData,
-        day: selectData.day,
-      },
+      selectData,
+      currentDate,
       dataArr: newDataArr,
       allDataArr: [allDataArr[0], newDataArr, allDataArr[2]],
     });
+
+    onCurrentDateChange && onCurrentDateChange(currentDate);
   };
+
   // 获取前(后)一个月的年月日信息
   getPreMonth(date, appointDay = 1) {
     let { year, month } = date || this.state.selectData;
@@ -326,21 +335,19 @@ export default class Calendar extends Component {
     this.dealMonthData("NEXT_MONTH");
   }
   // 处理月数据
-  dealMonthData(type, appointDay = 1) {
-    const { selectData: currentSelectData, dataArr: currentDataArr } =
-      this.state;
-    let selectData;
+  dealMonthData(type, selectData) {
+    const { dataArr: currentDataArr } = this.state;
     switch (type) {
       case "PRE_MONTH":
-        selectData = this.getPreMonth("", appointDay);
+        selectData = this.getPreMonth("");
         break;
       case "NEXT_MONTH":
-        selectData = this.getNextMonth("", appointDay);
+        selectData = this.getNextMonth("");
         break;
       default:
         break;
     }
-    const newSelectData = selectData || currentSelectData;
+    const newSelectData = selectData;
     const newDataArr = this.getMonthData(newSelectData);
 
     if (!isEqual(newDataArr, currentDataArr)) {
@@ -355,11 +362,13 @@ export default class Calendar extends Component {
   }
   // 今日
   checkoutCurrentDate() {
+    const currentDate = new Date(this.props.currentDate || new Date());
+    const currentDateData = this.getCurrentDateData(currentDate);
     this.setState({
-      isDelay: true,
-      currentDate: this.getCurrentDate(),
+      currentDate,
+      selectData: currentDateData,
     });
-    this.dealMonthData();
+    this.dealMonthData("", currentDateData);
   }
   // touch事件
   touchStart = (event) => {

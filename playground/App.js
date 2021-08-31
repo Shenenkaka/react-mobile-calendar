@@ -7,7 +7,10 @@ export default class App extends Component {
   render() {
     return (
       <div>
-        <Calendar />
+        <Calendar
+          currentDate="2021/07/06"
+          onCurrentDateChange={(curDate) => console.log(curDate)}
+        />
       </div>
     );
   }
