@@ -2,7 +2,7 @@
   "name": "react-mobile-calendar",
   "version": "0.1.0",
   "description": "移动端日历组件，可切换月模式，周模式。",
-  "main": "webpack.build.config.js",
+  "main": "lib/react-mobile-calendar.min.js",
   "scripts": {
     "start": "node ./server/dev.js",
     "stage": "node ./server/prod.js",
@@ -13,11 +13,7 @@
     "type": "git",
     "url": "git+https://github.com/Shenenkaka/react-mobile-calendar.git"
   },
-  "dependencies": {
-    "lodash": "^4.17.21",
-    "pdfjs-dist": "^2.6.347",
-    "react-virtualized": "^9.22.3"
-  },
+  "dependencies": {},
   "peerDependencies": {
     "react": ">=16",
     "react-dom": ">=16"
