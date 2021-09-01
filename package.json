@@ -1,5 +1,5 @@
 {
-  "name": "react-mobile-calendar",
+  "name": "react-h5-mobile-calendar",
   "version": "0.1.0",
   "description": "移动端日历组件，可切换月模式，周模式。",
   "main": "lib/react-mobile-calendar.min.js",
