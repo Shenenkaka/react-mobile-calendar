@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { isEqual } from "lodash";
 
 import "./Calendar.less";
+import "./common.less";
 
 export default class Calendar extends Component {
   constructor(props) {

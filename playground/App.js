@@ -1,5 +1,4 @@
 import Calendar from "../src/Calendar";
-import "../src/common.less";
 
 import React, { Component } from "react";
 
